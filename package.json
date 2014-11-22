@@ -5,8 +5,5 @@
   "author": "Aria Stewart <aredridel@dinhe.net>",
   "main": "index.js",
   "bin": "index.js",
-  "license": "ISC",
-  "dependencies": {
-    "wreck": "^5.0.1"
-  }
+  "license": "ISC"
 }
