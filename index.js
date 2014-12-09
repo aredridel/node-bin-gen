@@ -28,7 +28,10 @@ function go(platform, arch, version, cb) {
         },
         bin: {
             node: path.join(base, "bin/node")
-        }
+        },
+        files: [
+            filename
+        ]
     };
     fs.mkdir(dir, function (err) {
         if (err && err.code != 'EEXIST') {
