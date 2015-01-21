@@ -7,22 +7,23 @@ var path = require('path');
 var platform = process.argv[2];
 var arch = process.argv[3];
 var version = process.argv[4];
+var product = process.argv[5] ? "iojs" : "node";
 
 if (!platform || !arch || !version) {
-    console.warn("Use: " + process.argv[0] + " " + process.argv[1] + " platform arch version");
+    console.warn("Use: " + process.argv[0] + " " + process.argv[1] + " platform arch version [iojs]");
     process.exit(1);
     return;
 }
 
 
-function go(platform, arch, version, cb) {
-    var dir = 'node-' + platform + '-' + arch;
-    var base = "node-v" + version + "-" + platform + "-" + arch;
+function go(platform, arch, version, product, cb) {
+    var dir = product + "-" + platform + '-' + arch;
+    var base = product + "-v" + version + "-" + platform + "-" + arch;
     var filename = base + ".tar.gz";
     var package = {
-        name: "node-" + platform + "-" + arch,
+        name: product + "-" + platform + "-" + arch,
         version: version,
-        description: "node",
+        description: product,
         scripts: {
             preinstall: "tar xzf " + filename
         },
@@ -33,11 +34,16 @@ function go(platform, arch, version, cb) {
             filename
         ]
     };
+
+    if (product == "iojs") {
+        package.bin.iojs = path.join(base, "bin/iojs");
+    }
+
     fs.mkdir(dir, function (err) {
         if (err && err.code != 'EEXIST') {
             return cb(err);
         }
-        var req = https.get({hostname: "nodejs.org", path: "/dist/v" + version + "/" + filename});
+        var req = https.get({hostname: (product == "iojs" ? "iojs.org" : "nodejs.org"), path: "/dist/v" + version + "/" + filename});
         req.on('error', cb);
         req.on('response', function (res) {
             if (res.statusCode != 200) return cb("not ok: " + res.statusCode);
@@ -53,7 +59,7 @@ function go(platform, arch, version, cb) {
     });
 }
 
-go(platform, arch, version, function (err) {
+go(platform, arch, version, product, function (err) {
     if (err) {
         console.warn(err);
         process.exit(1);
