@@ -4,13 +4,11 @@ var fs = require('fs');
 var https = require('https');
 var path = require('path');
 
-var platform = process.argv[2];
-var arch = process.argv[3];
-var version = process.argv[4];
-var product = process.argv[5] ? "iojs" : "node";
+var p = parse(process.argv[2]);
+var version = process.argv[3];
 
-if (!platform || !arch || !version) {
-    console.warn("Use: " + process.argv[0] + " " + process.argv[1] + " platform arch version [iojs]");
+if (!p.platform || !p.arch || !version || !p.product) {
+    console.warn("Use: " + process.argv[0] + " " + process.argv[1] + " {node,iojs}-{platform}-{arch} version");
     process.exit(1);
     return;
 }
@@ -59,9 +57,18 @@ function go(platform, arch, version, product, cb) {
     });
 }
 
-go(platform, arch, version, product, function (err) {
+go(p.platform, p.arch, version, p.product, function (err) {
     if (err) {
         console.warn(err);
         process.exit(1);
     }
 });
+
+function parse(str) {
+    var out = {};
+    var parts = str.split('-');
+    out.product = parts[0];
+    out.platform = parts[1];
+    out.arch = parts[2];
+    return out;
+}
