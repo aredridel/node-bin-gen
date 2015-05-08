@@ -30,7 +30,11 @@ function go(platform, arch, version, product, cb) {
         },
         files: [
             filename
-        ]
+        ],
+        repository: {
+            type: "git",
+            url: "https://github.com/aredridel/" + product + "-bin"
+        }
     };
 
     if (product == "iojs") {
