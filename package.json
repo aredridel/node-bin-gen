@@ -5,5 +5,9 @@
   "author": "Aria Stewart <aredridel@dinhe.net>",
   "main": "index.js",
   "bin": "index.js",
-  "license": "ISC"
+  "license": "ISC",
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/aredridel/node-bin-gen"
+  }
 }
