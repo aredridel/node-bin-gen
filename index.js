@@ -70,7 +70,7 @@ go(p.platform, p.arch, version, p.product, function (err) {
 
 function parse(str) {
     var out = {};
-    var parts = str.split('-');
+    var parts = (str || '').split('-');
     out.product = parts[0];
     out.platform = parts[1];
     out.arch = parts[2];
