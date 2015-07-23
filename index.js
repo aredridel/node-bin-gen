@@ -45,7 +45,7 @@ function go(platform, arch, version, product, cb) {
         if (err && err.code != 'EEXIST') {
             return cb(err);
         }
-        var req = https.get({hostname: (product == "iojs" ? "iojs.org" : "nodejs.org"), path: "/dist/v" + version + "/" + filename});
+        var req = https.get({hostname: (product == "iojs" ? "iojs.org" : "nodejs.org"), path: (/rc/.test(version) ? "/download/rc/v" : "/dist/v") + version + "/" + filename});
         req.on('error', cb);
         req.on('response', function (res) {
             if (res.statusCode != 200) return cb("not ok: " + res.statusCode);
