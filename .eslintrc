@@ -1,0 +1,12 @@
+{
+    "env": {
+        "node": true
+    },
+    "rules": {
+        "no-process-exit": 0,
+        "no-shadow": 0,
+        "strict": 0,
+        "eqeqeq": 0,
+        "curly": 0
+    }
+}
