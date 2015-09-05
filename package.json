@@ -9,5 +9,9 @@
   "repository": {
     "type": "git",
     "url": "https://github.com/aredridel/node-bin-gen"
+  },
+  "dependencies": {
+    "bluebird": "^2.9.34",
+    "verror": "^1.6.0"
   }
 }
