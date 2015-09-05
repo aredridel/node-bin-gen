@@ -33,8 +33,9 @@ function go(platform, arch, version, product, cb) {
         ],
         repository: {
             type: "git",
-            url: "https://github.com/aredridel/" + product + "-bin"
-        }
+            url: "https://github.com/aredridel/" + product + "-bin.git"
+        },
+        homepage: "https://github.com/aredridel/" + product + "-bin"
     };
 
     if (product == "iojs") {
