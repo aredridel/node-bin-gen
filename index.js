@@ -9,18 +9,18 @@ var VError = require('verror');
 var p = parse(process.argv[2]);
 var version = process.argv[3];
 
-if (!p.os || !p.arch || !version || !p.product) {
-    console.warn("Use: " + process.argv[0] + " " + process.argv[1] + " {node,iojs}-{os}-{arch} version");
+if (!p.os || !p.cpu || !version || !p.product) {
+    console.warn("Use: " + process.argv[0] + " " + process.argv[1] + " {node,iojs}-{os}-{cpu} version");
     process.exit(1);
     return;
 }
 
-function go(os, arch, version, product) {
-    var dir = product + "-" + os + '-' + arch;
-    var base = product + "-v" + version + "-" + os + "-" + arch;
+function go(os, cpu, version, product) {
+    var dir = product + "-" + os + '-' + cpu;
+    var base = product + "-v" + version + "-" + os + "-" + cpu;
     var filename = base + ".tar.gz";
     var package = {
-        name: product + "-" + os + "-" + arch,
+        name: product + "-" + os + "-" + cpu,
         version: version,
         description: product,
         scripts: {
@@ -32,6 +32,8 @@ function go(os, arch, version, product) {
         files: [
             filename
         ],
+        os: os,
+        cpu: cpu,
         repository: {
             type: "git",
             url: "https://github.com/aredridel/" + product + "-bin.git"
@@ -67,7 +69,7 @@ function go(os, arch, version, product) {
     });
 }
 
-go(p.os, p.arch, version, p.product).catch(function (err) {
+go(p.os, p.cpu, version, p.product).catch(function (err) {
     console.warn(err);
     process.exit(1);
 });
@@ -77,6 +79,6 @@ function parse(str) {
     var parts = (str || '').split('-');
     out.product = parts[0];
     out.os = parts[1];
-    out.arch = parts[2];
+    out.cpu = parts[2];
     return out;
 }
