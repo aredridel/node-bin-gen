@@ -9,18 +9,18 @@ var VError = require('verror');
 var p = parse(process.argv[2]);
 var version = process.argv[3];
 
-if (!p.platform || !p.arch || !version || !p.product) {
-    console.warn("Use: " + process.argv[0] + " " + process.argv[1] + " {node,iojs}-{platform}-{arch} version");
+if (!p.os || !p.arch || !version || !p.product) {
+    console.warn("Use: " + process.argv[0] + " " + process.argv[1] + " {node,iojs}-{os}-{arch} version");
     process.exit(1);
     return;
 }
 
-function go(platform, arch, version, product) {
-    var dir = product + "-" + platform + '-' + arch;
-    var base = product + "-v" + version + "-" + platform + "-" + arch;
+function go(os, arch, version, product) {
+    var dir = product + "-" + os + '-' + arch;
+    var base = product + "-v" + version + "-" + os + "-" + arch;
     var filename = base + ".tar.gz";
     var package = {
-        name: product + "-" + platform + "-" + arch,
+        name: product + "-" + os + "-" + arch,
         version: version,
         description: product,
         scripts: {
@@ -67,7 +67,7 @@ function go(platform, arch, version, product) {
     });
 }
 
-go(p.platform, p.arch, version, p.product).catch(function (err) {
+go(p.os, p.arch, version, p.product).catch(function (err) {
     console.warn(err);
     process.exit(1);
 });
@@ -76,7 +76,7 @@ function parse(str) {
     var out = {};
     var parts = (str || '').split('-');
     out.product = parts[0];
-    out.platform = parts[1];
+    out.os = parts[1];
     out.arch = parts[2];
     return out;
 }
