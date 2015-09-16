@@ -30,7 +30,7 @@ function buildArchPackage(os, cpu, version, product, pre) {
     version: version + (pre != null ? '-' + pre : ''),
     description: product,
     bin: {
-      node: "bin/node"
+      node: "bin/" + product
     },
     files: [
       'bin/node',
@@ -50,7 +50,7 @@ function buildArchPackage(os, cpu, version, product, pre) {
 
   if (product == "iojs") {
     pkg.files.unshift('bin/iojs');
-    pkg.bin.iojs = path.join(base, "bin/iojs");
+    pkg.bin.iojs = "bin/iojs";
   }
 
   return rimraf(dir).then(function() {
@@ -124,7 +124,9 @@ fetchManifest(product).then(function(manifest) {
 }).map(function(v) {
   return buildArchPackage(v.os, v.cpu, version, product, pre);
 }).then(buildMetapackage(product, version + (pre != null ? '-' + pre : ''))).then(function(pkg) {
-  return fs.writeFileAsync(path.join(pkg.name, 'package.json'), JSON.stringify(pkg));
+  return fs.writeFileAsync(path.resolve(pkg.name, 'package.json'), JSON.stringify(pkg)).then(makeLinker).then(function(js) {
+    return fs.writeFileAsync(path.resolve(pkg.name, 'linkArchSpecificBinary.js'), js);
+  })
 }).catch(function(err) {
   console.warn(err.stack);
   process.exit(1);
@@ -133,14 +135,11 @@ fetchManifest(product).then(function(manifest) {
 function buildMetapackage(product, version) {
   return function(packages) {
     versionN = version.replace(/^v/, '');
-    return {
+    var pkg = {
       "name": product + "-bin",
       "version": version.replace(/^v/, ''),
       "description": "node",
       "main": "index.js",
-      "bin": {
-        "node": "node_modules/.bin/node"
-      },
       "keywords": [
         "runtime"
       ],
@@ -157,7 +156,36 @@ function buildMetapackage(product, version) {
         a[e.name] = e.version;
         return a;
       }, {}),
+      "engines": {
+          "npm": ">=3.0.0"
+      },
       "homepage": "https://github.com/aredridel/" + product + "-bin#readme"
     };
+
+    return pkg;
   };
+}
+
+function linkArchSpecificBinary(product) {
+  var path = require('path');
+  var fs = require('fs');
+  var bin = path.resolve(path.dirname(require.resolve([product, process.platform, process.arch].join('-') + '/package.json')), 'bin/' + product);
+
+  try {
+    fs.mkdirSync(path.resolve(__dirname, 'bin'));
+  } catch (e) {
+    if (e.code != 'EEXIST') {
+      throw e;
+    }
+  }
+
+  fs.linkSync(bin, path.resolve(__dirname, 'bin', 'node'));
+
+  if (product == 'iojs') {
+    fs.linkSync(bin, path.resolve(__dirname, 'bin', 'iojs'));
+  }
+}
+
+function makeLinker() {
+  return linkArchSpecificBinary.toString() + '\n\nlinkArchSpecificBinary.apply(null, process.argv.slice(2))\n';
 }
