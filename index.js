@@ -32,7 +32,7 @@ function buildArchPackage(os, cpu, version, product) {
       node: "bin/node"
     },
     files: [
-      'bin',
+      'bin/node',
       'share',
       'include',
       '*.md',
@@ -48,6 +48,7 @@ function buildArchPackage(os, cpu, version, product) {
   };
 
   if (product == "iojs") {
+    pkg.files.unshift('bin/iojs');
     pkg.bin.iojs = path.join(base, "bin/iojs");
   }
 
