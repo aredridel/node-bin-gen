@@ -9,6 +9,7 @@ var VError = require('verror');
 var tar = require('tar');
 var rimraf = P.promisify(require('rimraf'));
 var zlib = require('zlib');
+var cp = require('child_process');
 
 var product = process.argv[2];
 var version = process.argv[3];
@@ -67,11 +68,10 @@ function buildArchPackage(os, cpu, version, product) {
       req.on('response', function(res) {
         if (res.statusCode != 200) return reject(new VError("not ok: fetching %j got status code %s", spec, res.statusCode));
 
-        res.pipe(zlib.createGunzip()).pipe(tar.Extract({ path: dir, strip: 1 })).on('error', function(err) {
-          reject(err);
-        }).on('finish', function() {
-          accept();
-        });
+        var c = cp.spawn('tar', ['--strip-components=1', '-C', dir, '-x']);
+        res.pipe(zlib.createGunzip()).pipe(c.stdin).on('error', reject);;
+        c.stdout.on('finish', accept);
+        c.stderr.pipe(process.stderr);
       });
     });
   }).then(function() {
