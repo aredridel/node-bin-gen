@@ -13,20 +13,21 @@ var cp = require('child_process');
 
 var product = process.argv[2];
 var version = process.argv[3];
+var pre = process.argv[4];
 
 if (!version || !product) {
-  console.warn("Use: " + process.argv[0] + " " + process.argv[1] + " {node,iojs} version");
+  console.warn("Use: " + process.argv[0] + " " + process.argv[1] + " {node,iojs} version [pre]");
   process.exit(1);
   return;
 }
 
-function buildArchPackage(os, cpu, version, product) {
+function buildArchPackage(os, cpu, version, product, pre) {
   var dir = product + "-" + os + '-' + cpu;
   var base = product + "-" + version + "-" + os + "-" + cpu;
   var filename = base + ".tar.gz";
   var pkg = {
     name: product + "-" + os + "-" + cpu,
-    version: version,
+    version: version + (pre != null ? '-' + pre : ''),
     description: product,
     bin: {
       node: "bin/node"
@@ -121,8 +122,8 @@ fetchManifest(product).then(function(manifest) {
     };
   });
 }).map(function(v) {
-  return buildArchPackage(v.os, v.cpu, version, product);
-}).then(buildMetapackage(product, version)).then(function(pkg) {
+  return buildArchPackage(v.os, v.cpu, version, product, pre);
+}).then(buildMetapackage(product, version + (pre != null ? '-' + pre : ''))).then(function(pkg) {
   return fs.writeFileAsync(path.join(pkg.name, 'package.json'), JSON.stringify(pkg));
 }).catch(function(err) {
   console.warn(err.stack);
