@@ -12,6 +12,9 @@
   },
   "dependencies": {
     "bluebird": "^2.9.34",
+    "request": "^2.62.0",
+    "rimraf": "^2.4.3",
+    "tar": "^2.2.1",
     "verror": "^1.6.0"
   }
 }
