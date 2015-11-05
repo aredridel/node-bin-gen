@@ -10,13 +10,19 @@ var tar = require('tar');
 var rimraf = P.promisify(require('rimraf'));
 var zlib = require('zlib');
 var cp = require('child_process');
+var yargs = require('yargs');
 
-var product = process.argv[2];
-var version = process.argv[3];
-var pre = process.argv[4];
+yargs.demand(2, 3, 'You must specify node or iojs, version, and optionally a prerelease');
+yargs.help('help').wrap(76);
+var argv = yargs.argv;
+
+var product = argv._[0];
+var version = argv._[1];
+var pre = argv._[2];
+
 
 if (!version || !product) {
-  console.warn("Use: " + process.argv[0] + " " + process.argv[1] + " {node,iojs} version [pre]");
+  console.warn("Use: " + argv.$0 + " {node,iojs} version [pre]");
   process.exit(1);
   return;
 }
