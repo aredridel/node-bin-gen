@@ -12,6 +12,7 @@ var zlib = require('zlib');
 var cp = require('child_process');
 var yargs = require('yargs');
 
+yargs.describe('skip-binaries', 'Skip downloading the binaries');
 yargs.demand(2, 3, 'You must specify node or iojs, version, and optionally a prerelease');
 yargs.help('help').wrap(76);
 var argv = yargs.argv;
@@ -69,7 +70,7 @@ function buildArchPackage(os, cpu, version, product, pre) {
     if (err && err.code != 'EEXIST') {
       throw err;
     }
-  }).then(function() {
+  }).then(function downloadBinaries() {
     return new P(function(accept, reject) {
       var spec = {
         hostname: (product == "iojs" ? "iojs.org" : "nodejs.org"),
@@ -113,7 +114,7 @@ function getBody(rr) {
   return rr[0].body;
 }
 
-fetchManifest(product).then(function(manifest) {
+(argv['skip-binaries'] ? P.resolve([]) : fetchManifest(product).then(function(manifest) {
   var v = manifest.filter(function(ver) {
     return ver.version == version;
   }).shift();
@@ -133,10 +134,11 @@ fetchManifest(product).then(function(manifest) {
   });
 }).map(function(v) {
   return buildArchPackage(v.os, v.cpu, version, product, pre);
-}).then(buildMetapackage(product, version + (pre != null ? '-' + pre : ''))).then(function(pkg) {
-  return fs.writeFileAsync(path.resolve(pkg.name, 'package.json'), JSON.stringify(pkg, null, 2)).then(makeLinker).then(function(js) {
-    return fs.writeFileAsync(path.resolve(pkg.name, 'linkArchSpecificBinary.js'), js);
-  })
+})).then(buildMetapackage(product, version + (pre != null ? '-' + pre : ''))).then(function(pkg) {
+  return P.all([
+    fs.writeFileAsync(path.resolve(pkg.name, 'package.json'), JSON.stringify(pkg, null, 2)),
+    fs.writeFileAsync(path.resolve(pkg.name, 'linkArchSpecificBinary.js'), functionAsProgram(linkArchSpecificBinary, product))
+  ]);
 }).catch(function(err) {
   console.warn(err.stack);
   process.exit(1);
@@ -162,15 +164,16 @@ function buildMetapackage(product, version) {
       "bugs": {
         "url": "https://github.com/aredridel/" + product + "-bin/issues"
       },
-      "optionalDependencies": packages.reduce(function(a, e) {
-        a[e.name] = e.version;
-        return a;
-      }, {}),
       "engines": {
           "npm": ">=3.0.0"
       },
       "homepage": "https://github.com/aredridel/" + product + "-bin#readme"
     };
+
+    pkg.optionalDependencies = packages.reduce(function(a, e) {
+      a[e.name] = e.version;
+      return a;
+    }, {});
 
     return pkg;
   };
@@ -196,6 +199,14 @@ function linkArchSpecificBinary(product) {
   }
 }
 
-function makeLinker() {
-  return linkArchSpecificBinary.toString() + '\n\nlinkArchSpecificBinary.apply(null, process.argv.slice(2))\n';
+function installArchSpecificPackage(product) {
+    var spawn = require('child_process').spawn;
+
+    var cp = spawn('npm', ['install', [product, process.platform, process.arch].join('-')]);
+}
+
+function functionAsProgram(fn) {
+    if (!fn.name) throw new Error("Function must be named");
+    var args = [].slice.call(arguments, 1);
+    return fn.toString() + '\n\n' + fn.name + '.apply(null, ' + JSON.stringify(args) + '.concat(process.argv.slice(2)))\n';
 }
