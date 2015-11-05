@@ -137,7 +137,7 @@ function getBody(rr) {
 })).then(buildMetapackage(product, version + (pre != null ? '-' + pre : ''))).then(function(pkg) {
   return P.all([
     fs.writeFileAsync(path.resolve(pkg.name, 'package.json'), JSON.stringify(pkg, null, 2)),
-    fs.writeFileAsync(path.resolve(pkg.name, 'linkArchSpecificBinary.js'), functionAsProgram(linkArchSpecificBinary, product))
+    fs.writeFileAsync(path.resolve(pkg.name, 'installArchSpecificPackage.js'), functionAsProgram(installArchSpecificPackage, product, pkg.version))
   ]);
 }).catch(function(err) {
   console.warn(err.stack);
@@ -155,6 +155,12 @@ function buildMetapackage(product, version) {
       "keywords": [
         "runtime"
       ],
+      "scripts": {
+        "preinstall": "node installArchSpecificPackage"
+      },
+      "bin": {
+        "node": "bin/node"
+      },
       "license": "ISC",
       "repository": {
         "type": "git",
@@ -165,48 +171,47 @@ function buildMetapackage(product, version) {
         "url": "https://github.com/aredridel/" + product + "-bin/issues"
       },
       "engines": {
-          "npm": ">=3.0.0"
+        "npm": ">=3.0.0"
       },
       "homepage": "https://github.com/aredridel/" + product + "-bin#readme"
     };
-
-    pkg.optionalDependencies = packages.reduce(function(a, e) {
-      a[e.name] = e.version;
-      return a;
-    }, {});
 
     return pkg;
   };
 }
 
-function linkArchSpecificBinary(product) {
+function installArchSpecificPackage(product, version) {
+  var spawn = require('child_process').spawn;
   var path = require('path');
   var fs = require('fs');
-  var bin = path.resolve(path.dirname(require.resolve([product, process.platform, process.arch].join('-') + '/package.json')), 'bin/' + product);
 
-  try {
-    fs.mkdirSync(path.resolve(__dirname, 'bin'));
-  } catch (e) {
-    if (e.code != 'EEXIST') {
-      throw e;
+  process.env.npm_config_global = 'false';
+
+  var cp = spawn('npm', ['install', '--save-exact', '--save-bundle', [product, process.platform, process.arch].join('-') + '@' + version],  { stdio: 'inherit' });
+
+  cp.on('close', function (code) {
+    var bin = path.resolve(path.dirname(require.resolve([product, process.platform, process.arch].join('-') + '/package.json')), 'bin/' + product);
+
+    try {
+      fs.mkdirSync(path.resolve(__dirname, 'bin'));
+    } catch (e) {
+      if (e.code != 'EEXIST') {
+        throw e;
+      }
     }
-  }
 
-  fs.linkSync(bin, path.resolve(__dirname, 'bin', 'node'));
+    fs.linkSync(bin, path.resolve(__dirname, 'bin', 'node'));
 
-  if (product == 'iojs') {
-    fs.linkSync(bin, path.resolve(__dirname, 'bin', 'iojs'));
-  }
-}
+    if (product == 'iojs') {
+      fs.linkSync(bin, path.resolve(__dirname, 'bin', 'iojs'));
+    }
 
-function installArchSpecificPackage(product) {
-    var spawn = require('child_process').spawn;
-
-    var cp = spawn('npm', ['install', [product, process.platform, process.arch].join('-')]);
+    process.exit(code);
+  });
 }
 
 function functionAsProgram(fn) {
-    if (!fn.name) throw new Error("Function must be named");
-    var args = [].slice.call(arguments, 1);
-    return "#!/usr/bin/env node\n\n" + fn.toString() + '\n\n' + fn.name + '.apply(null, ' + JSON.stringify(args) + '.concat(process.argv.slice(2)))\n';
+  if (!fn.name) throw new Error("Function must be named");
+  var args = [].slice.call(arguments, 1);
+  return "#!/usr/bin/env node\n\n" + fn.toString() + '\n\n' + fn.name + '.apply(null, ' + JSON.stringify(args) + '.concat(process.argv.slice(2)))\n';
 }
