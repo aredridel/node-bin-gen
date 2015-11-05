@@ -204,13 +204,24 @@ function installArchSpecificPackage(product, version) {
       }
     }
 
-    fs.linkSync(bin, path.resolve(__dirname, 'bin', 'node'));
+    linkSync(bin, path.resolve(__dirname, 'bin', 'node'));
 
     if (product == 'iojs') {
-      fs.linkSync(bin, path.resolve(__dirname, 'bin', 'iojs'));
+      linkSync(bin, path.resolve(__dirname, 'bin', 'iojs'));
     }
 
-    process.exit(code);
+    return process.exit(code);
+
+    function linkSync(src, dest) {
+      try {
+        fs.unlinkSync(dest);
+      } catch (e) {
+        if (e.code != 'ENOENT') {
+          throw e;
+        }
+      }
+      return fs.linkSync(src, dest);
+    }
   });
 }
 
