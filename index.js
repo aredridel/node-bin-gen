@@ -27,6 +27,10 @@ if (!version || !product) {
   return;
 }
 
+if (version[0] != 'v') {
+    version = 'v' + version;
+}
+
 function buildArchPackage(os, cpu, version, product, pre) {
   var dir = product + "-" + os + '-' + cpu;
   var base = product + "-" + version + "-" + os + "-" + cpu;
