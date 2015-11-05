@@ -77,7 +77,7 @@ function buildArchPackage(os, cpu, version, product, pre) {
       });
     });
   }).then(function() {
-    return fs.writeFileAsync(path.join(dir, 'package.json'), JSON.stringify(pkg)).then(function() {
+    return fs.writeFileAsync(path.join(dir, 'package.json'), JSON.stringify(pkg, null, 2)).then(function() {
       return pkg;
     });
   });
@@ -124,7 +124,7 @@ fetchManifest(product).then(function(manifest) {
 }).map(function(v) {
   return buildArchPackage(v.os, v.cpu, version, product, pre);
 }).then(buildMetapackage(product, version + (pre != null ? '-' + pre : ''))).then(function(pkg) {
-  return fs.writeFileAsync(path.resolve(pkg.name, 'package.json'), JSON.stringify(pkg)).then(makeLinker).then(function(js) {
+  return fs.writeFileAsync(path.resolve(pkg.name, 'package.json'), JSON.stringify(pkg, null, 2)).then(makeLinker).then(function(js) {
     return fs.writeFileAsync(path.resolve(pkg.name, 'linkArchSpecificBinary.js'), js);
   })
 }).catch(function(err) {
