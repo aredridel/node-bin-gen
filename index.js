@@ -176,6 +176,10 @@ function buildMetapackage(product, version) {
       "homepage": "https://github.com/aredridel/" + product + "-bin#readme"
     };
 
+    if (product == 'iojs') {
+      pkg.bin.iojs = "bin/iojs";
+    }
+
     return pkg;
   };
 }
