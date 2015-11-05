@@ -208,5 +208,5 @@ function installArchSpecificPackage(product) {
 function functionAsProgram(fn) {
     if (!fn.name) throw new Error("Function must be named");
     var args = [].slice.call(arguments, 1);
-    return fn.toString() + '\n\n' + fn.name + '.apply(null, ' + JSON.stringify(args) + '.concat(process.argv.slice(2)))\n';
+    return "#!/usr/bin/env node\n\n" + fn.toString() + '\n\n' + fn.name + '.apply(null, ' + JSON.stringify(args) + '.concat(process.argv.slice(2)))\n';
 }
