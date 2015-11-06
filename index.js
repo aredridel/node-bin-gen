@@ -29,7 +29,7 @@ if (!version || !product) {
 }
 
 if (version[0] != 'v') {
-    version = 'v' + version;
+  version = 'v' + version;
 }
 
 function buildArchPackage(os, cpu, version, product, pre) {
@@ -194,9 +194,11 @@ function installArchSpecificPackage(product, version) {
 
   process.env.npm_config_global = 'false';
 
-  var cp = spawn('npm', ['install', '--save-exact', '--save-bundle', [product, process.platform, process.arch].join('-') + '@' + version],  { stdio: 'inherit' });
+  var cp = spawn('npm', ['install', '--save-exact', '--save-bundle', [product, process.platform, process.arch].join('-') + '@' + version], {
+    stdio: 'inherit'
+  });
 
-  cp.on('close', function (code) {
+  cp.on('close', function(code) {
     var bin = path.resolve(path.dirname(require.resolve([product, process.platform, process.arch].join('-') + '/package.json')), 'bin/' + product);
 
     try {
@@ -229,7 +231,8 @@ function installArchSpecificPackage(product, version) {
 }
 
 function functionAsProgram(fn) {
-  if (!fn.name) throw new Error("Function must be named");
+  if (!fn.name)
+    throw new Error("Function must be named");
   var args = [].slice.call(arguments, 1);
   return "#!/usr/bin/env node\n\n" + fn.toString() + '\n\n' + fn.name + '.apply(null, ' + JSON.stringify(args) + '.concat(process.argv.slice(2)))\n';
 }
