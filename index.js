@@ -122,7 +122,7 @@ function fetchManifest(product) {
       format: bits[2] || 'tar.gz'
     };
   });
-}).map(function(v) {
+}).reduce(function(a, v) {
   return buildArchPackage(v.os, v.cpu, version, product, pre);
 })).then(buildMetapackage(product, version + (pre != null ? '-' + pre : ''))).then(function(pkg) {
   return fs.mkdirAsync(pkg.name).catch(function(err) {
