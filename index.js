@@ -11,6 +11,7 @@ var rimraf = P.promisify(require('rimraf'));
 var zlib = require('zlib');
 var cp = require('child_process');
 var yargs = require('yargs');
+var pump = P.promisify(require('pump'));
 
 yargs.describe('skip-binaries', 'Skip downloading the binaries');
 yargs.demand(2, 3, 'You must specify node or iojs, version, and optionally a prerelease');
@@ -80,14 +81,14 @@ function buildArchPackage(os, cpu, version, product, pre) {
         throw new VError("not ok: fetching %j got status code %s", spec, res.status);
       }
 
-      return new P(function(accept, reject) {
-        res.body.on('error', reject)
+      var c = cp.spawn('tar', ['--strip-components=1', '-C', dir, '-x']);
 
-        var c = cp.spawn('tar', ['--strip-components=1', '-C', dir, '-x']);
-        res.body.pipe(zlib.createGunzip()).pipe(c.stdin).on('error', reject);;
-        c.stdout.on('finish', accept);
-        c.stderr.pipe(process.stderr);
+      c.stderr.pipe(process.stderr);
+      c.stdout.on('finish', function() {
+        c.stderr.destroy();
       });
+
+      return pump(res.body, zlib.createGunzip(), c.stdin);
     });
   }).then(function() {
     return fs.writeFileAsync(path.join(dir, 'package.json'), JSON.stringify(pkg, null, 2)).then(function() {
