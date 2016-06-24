@@ -65,18 +65,12 @@ function buildArchPackage(os, cpu, version, product, pre) {
     pkg.bin.iojs = "bin/iojs";
   }
 
-  return rimraf(dir).then(function() {
+  return rimraf(dir, { glob: false }).then(function() {
     return fs.mkdirAsync(dir);
-  }).catch(function(err) {
-    if (err && err.code != 'EEXIST') {
-      throw err;
-    }
   }).then(function downloadBinaries() {
-    var spec = {
-      hostname: (product == "iojs" ? "iojs.org" : "nodejs.org"),
-      path: (/rc/.test(version) ? "/download/rc/" : "/dist/") + version + "/" + filename
-    }
-    return fetch("https://" + spec.hostname + spec.path).then(function(res) {
+    var url = "https://" + (product == "iojs" ? "iojs.org" : "nodejs.org") + (/rc/.test(version) ? "/download/rc/" : "/dist/") + version + "/" + filename;
+
+    return fetch(url).then(function(res) {
       if (res.status != 200) {
         throw new VError("not ok: fetching %j got status code %s", spec, res.status);
       }
@@ -84,9 +78,6 @@ function buildArchPackage(os, cpu, version, product, pre) {
       var c = cp.spawn('tar', ['--strip-components=1', '-C', dir, '-x']);
 
       c.stderr.pipe(process.stderr);
-      c.stdout.on('finish', function() {
-        c.stderr.destroy();
-      });
 
       return pump(res.body, zlib.createGunzip(), c.stdin);
     });
