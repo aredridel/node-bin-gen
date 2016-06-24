@@ -135,13 +135,19 @@ function getBody(rr) {
 }).map(function(v) {
   return buildArchPackage(v.os, v.cpu, version, product, pre);
 })).then(buildMetapackage(product, version + (pre != null ? '-' + pre : ''))).then(function(pkg) {
-  return P.all([
-    fs.readFileAsync(path.resolve(__dirname, 'node-bin-README.md')).then(function(readme) {
-      return fs.writeFileAsync(path.resolve(pkg.name, 'README.md'), readme)
-    }),
-    fs.writeFileAsync(path.resolve(pkg.name, 'package.json'), JSON.stringify(pkg, null, 2)),
-    fs.writeFileAsync(path.resolve(pkg.name, 'installArchSpecificPackage.js'), functionAsProgram(installArchSpecificPackage, product, pkg.version))
-  ]);
+  return fs.mkdirAsync(pkg.name).catch(function(err) {
+    if (err && err.code != 'EEXIST') {
+      throw err;
+    }
+  }).then(function() {
+    return P.all([
+      fs.readFileAsync(path.resolve(__dirname, 'node-bin-README.md')).then(function(readme) {
+        return fs.writeFileAsync(path.resolve(pkg.name, 'README.md'), readme)
+      }),
+      fs.writeFileAsync(path.resolve(pkg.name, 'package.json'), JSON.stringify(pkg, null, 2)),
+      fs.writeFileAsync(path.resolve(pkg.name, 'installArchSpecificPackage.js'), functionAsProgram(installArchSpecificPackage, product, pkg.version))
+    ]);
+  });
 }).catch(function(err) {
   console.warn(err.stack);
   process.exit(1);
