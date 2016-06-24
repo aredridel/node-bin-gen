@@ -11,11 +11,11 @@
     "url": "https://github.com/aredridel/node-bin-gen"
   },
   "dependencies": {
-    "bluebird": "^2.9.34",
-    "request": "^2.62.0",
-    "rimraf": "^2.4.3",
+    "bluebird": "^3.4.1",
+    "node-fetch": "^1.5.3",
+    "rimraf": "^2.5.2",
     "tar": "^2.2.1",
-    "verror": "^1.6.0",
-    "yargs": "^3.29.0"
+    "verror": "^1.6.1",
+    "yargs": "^4.7.1"
   }
 }

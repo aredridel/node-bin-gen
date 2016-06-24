@@ -2,7 +2,7 @@
 
 var P = require('bluebird');
 var fs = P.promisifyAll(require('fs'));
-var request = P.promisify(require('request'));
+var fetch = require('node-fetch');
 var https = require('https');
 var path = require('path');
 var VError = require('verror');
@@ -71,18 +71,20 @@ function buildArchPackage(os, cpu, version, product, pre) {
       throw err;
     }
   }).then(function downloadBinaries() {
-    return new P(function(accept, reject) {
-      var spec = {
-        hostname: (product == "iojs" ? "iojs.org" : "nodejs.org"),
-        path: (/rc/.test(version) ? "/download/rc/" : "/dist/") + version + "/" + filename
+    var spec = {
+      hostname: (product == "iojs" ? "iojs.org" : "nodejs.org"),
+      path: (/rc/.test(version) ? "/download/rc/" : "/dist/") + version + "/" + filename
+    }
+    return fetch("https://" + spec.hostname + spec.path).then(function(res) {
+      if (res.status != 200) {
+        throw new VError("not ok: fetching %j got status code %s", spec, res.status);
       }
-      var req = https.get(spec);
-      req.on('error', reject);
-      req.on('response', function(res) {
-        if (res.statusCode != 200) return reject(new VError("not ok: fetching %j got status code %s", spec, res.statusCode));
+
+      return new P(function(accept, reject) {
+        res.body.on('error', reject)
 
         var c = cp.spawn('tar', ['--strip-components=1', '-C', dir, '-x']);
-        res.pipe(zlib.createGunzip()).pipe(c.stdin).on('error', reject);;
+        res.body.pipe(zlib.createGunzip()).pipe(c.stdin).on('error', reject);;
         c.stdout.on('finish', accept);
         c.stderr.pipe(process.stderr);
       });
@@ -97,21 +99,17 @@ function buildArchPackage(os, cpu, version, product, pre) {
 function fetchManifest(product) {
   return P.try(function() {
     if (product == 'iojs') {
-      return {
-        url: 'http://iojs.org/dist/index.json'
-      };
+      return 'http://iojs.org/dist/index.json'
     } else if (product == 'node') {
-      return {
-        url: 'http://nodejs.org/dist/index.json'
-      };
+      return 'http://nodejs.org/dist/index.json'
     } else {
       throw new VError("unknown product '%s'", product);
     }
-  }).then(request).then(getBody).then(JSON.parse);
-}
-
-function getBody(rr) {
-  return rr[0].body;
+  }).then(function(url) {
+    return fetch(url);
+  }).then(function(res) {
+    return res.json();
+  })
 }
 
 (argv['skip-binaries'] ? P.resolve([]) : fetchManifest(product).then(function(manifest) {
