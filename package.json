@@ -18,5 +18,19 @@
     "tar": "^2.2.1",
     "verror": "^1.8.1",
     "yargs": "^4.7.1"
+  },
+  "eslintConfig": {
+    "parserOptions": {
+      "ecmaVersion": 6
+    },
+    "rules": {
+      "valid-typeof": "error",
+      "no-undef": "error",
+      "no-unused-vars": "error"
+    },
+    "env": {
+      "browser": true,
+      "node": true
+    }
   }
 }
