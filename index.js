@@ -12,6 +12,7 @@ var zlib = require('zlib');
 var cp = require('child_process');
 var yargs = require('yargs');
 var pump = P.promisify(require('pump'));
+var debug = require('util').debuglog('node-bin-gen');
 
 yargs.describe('skip-binaries', 'Skip downloading the binaries');
 yargs.demand(2, 3, 'You must specify node or iojs, version, and optionally a prerelease');
@@ -65,7 +66,7 @@ function buildArchPackage(os, cpu, version, product, pre) {
     pkg.bin.iojs = "bin/iojs";
   }
 
-  return rimraf(dir, { glob: false }).then(function() {
+  return P.try(() => debug('removing', dir)).then(() => rimraf(dir, { glob: false })).then(function() {
     return fs.mkdirAsync(dir);
   }).then(function downloadBinaries() {
     var url = "https://" + (product == "iojs" ? "iojs.org" : "nodejs.org") + (/rc/.test(version) ? "/download/rc/" : "/dist/") + version + "/" + filename;
@@ -105,12 +106,14 @@ function fetchManifest(product) {
 }
 
 (argv['skip-binaries'] ? P.resolve([]) : fetchManifest(product).then(function(manifest) {
+
   var v = manifest.filter(function(ver) {
     return ver.version == version;
   }).shift();
   if (!v) {
     throw new VError("No such version '%s'", version);
   }
+  debug("manifest", v);
 
   return v.files.filter(function(f) {
     return !/^headers|^win|^src/.test(f);
