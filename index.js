@@ -116,7 +116,7 @@ function fetchManifest(product) {
   debug("manifest", v);
 
   return v.files.filter(function(f) {
-    return !/^headers|^win|^src/.test(f);
+    return !/^headers|^win|^src/.test(f) && !/pkg$/.test(f);
   }).map(function(f) {
     var bits = f.split('-');
     return {
