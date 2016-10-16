@@ -35,6 +35,7 @@ if (version[0] != 'v') {
 }
 
 function buildArchPackage(os, cpu, version, product, pre) {
+  debug("building architecture specitic package", os, cpu, version, product, pre);
   var dir = product + "-" + os + '-' + cpu;
   var base = product + "-" + version + "-" + os + "-" + cpu;
   var filename = base + ".tar.gz";
@@ -69,13 +70,19 @@ function buildArchPackage(os, cpu, version, product, pre) {
   return P.try(() => debug('removing', dir)).then(() => rimraf(dir, { glob: false })).then(function() {
     return fs.mkdirAsync(dir);
   }).then(function downloadBinaries() {
-    var url = "https://" + (product == "iojs" ? "iojs.org" : "nodejs.org") + (/rc/.test(version) ? "/download/rc/" : "/dist/") + version + "/" + filename;
+    var url = "https://" + (product == "iojs" ? "iojs.org" : "nodejs.org") + (
+      /rc/.test(version) ? "/download/rc/" :
+      /test/.test(version) ? "/download/test/" :
+      "/dist/"
+    ) + version + "/" + filename;
 
+    debug("Fetching", url);
     return fetch(url).then(function(res) {
       if (res.status != 200) {
-        throw new VError("not ok: fetching %j got status code %s", spec, res.status);
+        throw new VError("not ok: fetching %j got status code %s", url, res.status);
       }
 
+      debug("Unpacking into", dir);
       var c = cp.spawn('tar', ['--strip-components=1', '-C', dir, '-x']);
 
       c.stderr.pipe(process.stderr);
@@ -89,14 +96,22 @@ function buildArchPackage(os, cpu, version, product, pre) {
   });
 }
 
-function fetchManifest(product) {
+function fetchManifest(product, version) {
   return P.try(function() {
     if (product == 'iojs') {
-      return 'http://iojs.org/dist/index.json'
+      return 'http://iojs.org';
     } else if (product == 'node') {
-      return 'http://nodejs.org/dist/index.json'
+      return 'http://nodejs.org'
     } else {
       throw new VError("unknown product '%s'", product);
+    }
+  }).then(function(base) {
+    if (/rc/.test(version)) {
+      return `${base}/download/rc/index.json`;
+    } else if (/test/.test(version)) {
+      return `${base}/download/test/index.json`;
+    } else {
+      return `${base}/dist/index.json`;
     }
   }).then(function(url) {
     return fetch(url);
@@ -105,7 +120,7 @@ function fetchManifest(product) {
   })
 }
 
-(argv['skip-binaries'] ? P.resolve([]) : fetchManifest(product).then(function(manifest) {
+(argv['skip-binaries'] ? P.resolve([]) : fetchManifest(product, version).then(function(manifest) {
 
   var v = manifest.filter(function(ver) {
     return ver.version == version;
@@ -114,6 +129,11 @@ function fetchManifest(product) {
     throw new VError("No such version '%s'", version);
   }
   debug("manifest", v);
+
+  if (!v.files || !v.files.length) {
+    debug("No files, defaulting");
+    v.files =  ['darwin-x64', 'linux-arm64', 'linux-armv7l', 'linux-ppc64', 'linux-ppc64le', 'linux-s390x', 'linux-x64', 'linux-x86', 'sunos-x64'];
+  }
 
   return v.files.filter(function(f) {
     return !/^headers|^win|^src/.test(f) && !/pkg$/.test(f);
@@ -125,7 +145,7 @@ function fetchManifest(product) {
       format: bits[2] || 'tar.gz'
     };
   });
-}).reduce(function(a, v) {
+}).map(function(v) {
   return buildArchPackage(v.os, v.cpu, version, product, pre);
 })).then(buildMetapackage(product, version + (pre != null ? '-' + pre : ''))).then(function(pkg) {
   return fs.mkdirAsync(pkg.name).catch(function(err) {
