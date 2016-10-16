@@ -15,17 +15,15 @@ var pump = P.promisify(require('pump'));
 var debug = require('util').debuglog('node-bin-gen');
 
 yargs.describe('skip-binaries', 'Skip downloading the binaries');
-yargs.demand(2, 3, 'You must specify node or iojs, version, and optionally a prerelease');
+yargs.demand(1, 2, 'You must specify version, and optionally a prerelease');
 yargs.help('help').wrap(76);
 var argv = yargs.argv;
 
-var product = argv._[0];
-var version = argv._[1];
-var pre = argv._[2];
+var version = argv._[0];
+var pre = argv._[1];
 
-
-if (!version || !product) {
-  console.warn("Use: " + argv.$0 + " {node,iojs} version [pre]");
+if (!version) {
+  console.warn("Use: " + argv.$0 + " version [pre]");
   process.exit(1);
   return;
 }
@@ -34,17 +32,17 @@ if (version[0] != 'v') {
   version = 'v' + version;
 }
 
-function buildArchPackage(os, cpu, version, product, pre) {
-  debug("building architecture specitic package", os, cpu, version, product, pre);
-  var dir = product + "-" + os + '-' + cpu;
-  var base = product + "-" + version + "-" + os + "-" + cpu;
+function buildArchPackage(os, cpu, version, pre) {
+  debug("building architecture specitic package", os, cpu, version, pre);
+  var dir = "node-" + os + '-' + cpu;
+  var base = "node-" + version + "-" + os + "-" + cpu;
   var filename = base + ".tar.gz";
   var pkg = {
-    name: product + "-" + os + "-" + cpu,
+    name: 'node' + "-" + os + "-" + cpu,
     version: version + (pre != null ? '-' + pre : ''),
-    description: product,
+    description: 'node',
     bin: {
-      node: "bin/" + product
+      node: "bin/node"
     },
     files: [
       'bin/node',
@@ -54,23 +52,13 @@ function buildArchPackage(os, cpu, version, product, pre) {
       'LICENSE'
     ],
     os: os,
-    cpu: cpu,
-    repository: {
-      type: "git",
-      url: "https://github.com/aredridel/" + product + "-bin.git"
-    },
-    homepage: "https://github.com/aredridel/" + product + "-bin"
+    cpu: cpu
   };
-
-  if (product == "iojs") {
-    pkg.files.unshift('bin/iojs');
-    pkg.bin.iojs = "bin/iojs";
-  }
 
   return P.try(() => debug('removing', dir)).then(() => rimraf(dir, { glob: false })).then(function() {
     return fs.mkdirAsync(dir);
   }).then(function downloadBinaries() {
-    var url = "https://" + (product == "iojs" ? "iojs.org" : "nodejs.org") + (
+    var url = "https://nodejs.org" + (
       /rc/.test(version) ? "/download/rc/" :
       /test/.test(version) ? "/download/test/" :
       "/dist/"
@@ -96,16 +84,9 @@ function buildArchPackage(os, cpu, version, product, pre) {
   });
 }
 
-function fetchManifest(product, version) {
+function fetchManifest(version) {
+  const base = 'http://nodejs.org';
   return P.try(function() {
-    if (product == 'iojs') {
-      return 'http://iojs.org';
-    } else if (product == 'node') {
-      return 'http://nodejs.org'
-    } else {
-      throw new VError("unknown product '%s'", product);
-    }
-  }).then(function(base) {
     if (/rc/.test(version)) {
       return `${base}/download/rc/index.json`;
     } else if (/test/.test(version)) {
@@ -120,7 +101,7 @@ function fetchManifest(product, version) {
   })
 }
 
-(argv['skip-binaries'] ? P.resolve([]) : fetchManifest(product, version).then(function(manifest) {
+(argv['skip-binaries'] ? P.resolve([]) : fetchManifest(version).then(function(manifest) {
 
   var v = manifest.filter(function(ver) {
     return ver.version == version;
@@ -146,8 +127,8 @@ function fetchManifest(product, version) {
     };
   });
 }).map(function(v) {
-  return buildArchPackage(v.os, v.cpu, version, product, pre);
-})).then(buildMetapackage(product, version + (pre != null ? '-' + pre : ''))).then(function(pkg) {
+  return buildArchPackage(v.os, v.cpu, version, pre);
+})).then(buildMetapackage(version + (pre != null ? '-' + pre : ''))).then(function(pkg) {
   return fs.mkdirAsync(pkg.name).catch(function(err) {
     if (err && err.code != 'EEXIST') {
       throw err;
@@ -158,7 +139,7 @@ function fetchManifest(product, version) {
         return fs.writeFileAsync(path.resolve(pkg.name, 'README.md'), readme)
       }),
       fs.writeFileAsync(path.resolve(pkg.name, 'package.json'), JSON.stringify(pkg, null, 2)),
-      fs.writeFileAsync(path.resolve(pkg.name, 'installArchSpecificPackage.js'), functionAsProgram(installArchSpecificPackage, product, pkg.version))
+      fs.writeFileAsync(path.resolve(pkg.name, 'installArchSpecificPackage.js'), functionAsProgram(installArchSpecificPackage, pkg.version))
     ]);
   });
 }).catch(function(err) {
@@ -166,11 +147,11 @@ function fetchManifest(product, version) {
   process.exit(1);
 });
 
-function buildMetapackage(product, version) {
+function buildMetapackage(version) {
   return function(packages) {
     versionN = version.replace(/^v/, '');
     var pkg = {
-      "name": product + "-bin",
+      "name": "node-bin",
       "version": version.replace(/^v/, ''),
       "description": "node",
       "main": "index.js",
@@ -184,41 +165,29 @@ function buildMetapackage(product, version) {
         "node": "bin/node"
       },
       "license": "ISC",
-      "repository": {
-        "type": "git",
-        "url": "git+https://github.com/aredridel/" + product + "-bin.git"
-      },
       "author": "",
-      "bugs": {
-        "url": "https://github.com/aredridel/" + product + "-bin/issues"
-      },
       "engines": {
         "npm": ">=3.0.0"
-      },
-      "homepage": "https://github.com/aredridel/" + product + "-bin#readme"
+      }
     };
-
-    if (product == 'iojs') {
-      pkg.bin.iojs = "bin/iojs";
-    }
 
     return pkg;
   };
 }
 
-function installArchSpecificPackage(product, version) {
+function installArchSpecificPackage(version) {
   var spawn = require('child_process').spawn;
   var path = require('path');
   var fs = require('fs');
 
   process.env.npm_config_global = 'false';
 
-  var cp = spawn('npm', ['install', '--save-exact', '--save-bundle', [product, process.platform, process.arch].join('-') + '@' + version], {
+  var cp = spawn('npm', ['install', '--save-exact', '--save-bundle', ['node', process.platform, process.arch].join('-') + '@' + version], {
     stdio: 'inherit'
   });
 
   cp.on('close', function(code) {
-    var bin = path.resolve(path.dirname(require.resolve([product, process.platform, process.arch].join('-') + '/package.json')), 'bin/' + product);
+    var bin = path.resolve(path.dirname(require.resolve(['node', process.platform, process.arch].join('-') + '/package.json')), 'bin/node');
 
     try {
       fs.mkdirSync(path.resolve(__dirname, 'bin'));
@@ -230,9 +199,6 @@ function installArchSpecificPackage(product, version) {
 
     linkSync(bin, path.resolve(__dirname, 'bin', 'node'));
 
-    if (product == 'iojs') {
-      linkSync(bin, path.resolve(__dirname, 'bin', 'iojs'));
-    }
 
     return process.exit(code);
 
