@@ -16,7 +16,7 @@
     "pump": "^1.0.1",
     "rimraf": "^2.5.2",
     "tar": "^2.2.1",
-    "verror": "^1.8.1",
+    "verror": "^1.9.0",
     "yargs": "^6.4.0"
   },
   "eslintConfig": {
