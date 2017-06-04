@@ -73,7 +73,7 @@ function buildArchPackage(os, cpu, version, pre) {
       debug("Unpacking into", dir);
       var c = cp.spawn('tar', ['--strip-components=1', '-C', dir, '-x']);
 
-      c.stderr.pipe(process.stderr);
+      pump(c.stderr, process.stderr);
 
       return pump(res.body, zlib.createGunzip(), c.stdin);
     });
