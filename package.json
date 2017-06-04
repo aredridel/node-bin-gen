@@ -29,7 +29,6 @@
       "no-unused-vars": "error"
     },
     "env": {
-      "browser": true,
       "node": true
     }
   }
