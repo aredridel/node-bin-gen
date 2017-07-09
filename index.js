@@ -9,12 +9,13 @@ var VError = require('verror');
 var tar = require('tar');
 var rimraf = P.promisify(require('rimraf'));
 var zlib = require('zlib');
-var cp = require('child_process');
+var cp = P.promisifyAll(require('child_process'));
 var yargs = require('yargs');
 var pump = P.promisify(require('pump'));
 var debug = require('util').debuglog('node-bin-gen');
 
 yargs.describe('skip-binaries', 'Skip downloading the binaries');
+yargs.option('only', { describe: 'Only download this binary package' });
 yargs.demand(1, 2, 'You must specify version, and optionally a prerelease');
 yargs.help('help').wrap(76);
 var argv = yargs.argv;
@@ -33,30 +34,37 @@ if (version[0] != 'v') {
 }
 
 function buildArchPackage(os, cpu, version, pre) {
-  debug("building architecture specitic package", os, cpu, version, pre);
+  debug("building architecture specific package", os, cpu, version, pre);
+
+  var platform = os == 'win' ? 'win32' : os;
+  var arch = os == 'win' && cpu == 'ia32' ? 'x86' : cpu;
+  var executable = os == 'win' ? 'bin/node.exe' : 'bin/node';
+
   var dir = "node-" + os + '-' + cpu;
   var base = "node-" + version + "-" + os + "-" + cpu;
-  var filename = base + ".tar.gz";
+  var filename = base + (os == 'win' ? '.zip' : ".tar.gz");
   var pkg = {
     name: 'node' + "-" + os + "-" + cpu,
     version: version + (pre != null ? '-' + pre : ''),
     description: 'node',
     bin: {
-      node: "bin/node"
+      node: os == 'win' ? 'bin/node.exe' : "bin/node"
     },
     files: [
-      'bin/node',
+      os == 'win' ? 'bin/node.exe' : 'bin/node',
       'share',
       'include',
       '*.md',
       'LICENSE'
     ],
-    os: os,
-    cpu: cpu
+    os: platform,
+    cpu: arch
   };
 
   return P.try(() => debug('removing', dir)).then(() => rimraf(dir, { glob: false })).then(function() {
-    return fs.mkdirAsync(dir);
+    return fs.mkdirAsync(dir).catch(e => {
+      if (e.code != 'EEXIST') throw e;
+    });
   }).then(function downloadBinaries() {
     var url = "https://nodejs.org" + (
       /rc/.test(version) ? "/download/rc/" :
@@ -71,11 +79,16 @@ function buildArchPackage(os, cpu, version, pre) {
       }
 
       debug("Unpacking into", dir);
-      var c = cp.spawn('tar', ['--strip-components=1', '-C', dir, '-x']);
-
-      pump(c.stderr, process.stderr);
-
-      return pump(res.body, zlib.createGunzip(), c.stdin);
+      if (os == 'win') {
+        const f = fs.createWriteStream(filename);
+        const written = pump(res.body, f);
+        return written.then(() => cp.execFileAsync('unzip', ['-d', `${dir}/bin`, '-o', '-j', filename, `${base}/node.exe` ]));
+      } else {
+        const c = cp.spawn('tar', ['--strip-components=1', '-C', dir, '-x'], {
+	  stdio: [ 'pipe', process.stdout, process.stderr ]
+	});
+        return pump(res.body, zlib.createGunzip(), c.stdin);
+      }
     });
   }).then(function() {
     return fs.writeFileAsync(path.join(dir, 'package.json'), JSON.stringify(pkg, null, 2)).then(function() {
@@ -113,11 +126,13 @@ function fetchManifest(version) {
 
   if (!v.files || !v.files.length) {
     debug("No files, defaulting");
-    v.files =  ['darwin-x64', 'linux-arm64', 'linux-armv7l', 'linux-ppc64', 'linux-ppc64le', 'linux-s390x', 'linux-x64', 'linux-x86', 'sunos-x64'];
+    v.files =  ['darwin-x64', 'linux-arm64', 'linux-armv7l', 'linux-ppc64', 'linux-ppc64le', 'linux-s390x', 'linux-x64', 'linux-x86', 'sunos-x64', 'win-x64', 'win-x86'];
   }
 
-  return v.files.filter(function(f) {
-    return !/^headers|^win|^src/.test(f) && !/pkg$/.test(f);
+  const files = argv.only ? [argv.only] : v.files;
+
+  return files.filter(function(f) {
+    return !/^headers|^src/.test(f) && !/pkg$/.test(f);
   }).map(function(f) {
     var bits = f.split('-');
     return {
@@ -182,12 +197,16 @@ function installArchSpecificPackage(version) {
 
   process.env.npm_config_global = 'false';
 
-  var cp = spawn('npm', ['install', '--save-exact', '--save-bundle', ['node', process.platform, process.arch].join('-') + '@' + version], {
+  var platform = process.platform == 'win32' ? 'win' : process.platform;
+  var arch = platform == 'win' && process.arch == 'ia32' ? 'x86' : process.arch;
+  var executable = platform == 'win' ? 'bin/node.exe' : 'bin/node';
+
+  var cp = spawn('npm', ['install', '--save-exact', '--save-bundle', ['node', platform, arch].join('-') + '@' + version], {
     stdio: 'inherit'
   });
 
   cp.on('close', function(code) {
-    var bin = path.resolve(path.dirname(require.resolve(['node', process.platform, process.arch].join('-') + '/package.json')), 'bin/node');
+    var bin = path.resolve(path.dirname(require.resolve(['node', platform, arch].join('-') + '/package.json')), executable);
 
     try {
       fs.mkdirSync(path.resolve(__dirname, 'bin'));
@@ -197,7 +216,7 @@ function installArchSpecificPackage(version) {
       }
     }
 
-    linkSync(bin, path.resolve(__dirname, 'bin', 'node'));
+    linkSync(bin, path.resolve(__dirname, executable));
 
 
     return process.exit(code);
