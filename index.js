@@ -202,7 +202,8 @@ function installArchSpecificPackage(version) {
   var executable = platform == 'win' ? 'bin/node.exe' : 'bin/node';
 
   var cp = spawn('npm', ['install', '--save-exact', '--save-bundle', ['node', platform, arch].join('-') + '@' + version], {
-    stdio: 'inherit'
+    stdio: 'inherit',
+    shell: true
   });
 
   cp.on('close', function(code) {
@@ -218,6 +219,17 @@ function installArchSpecificPackage(version) {
 
     linkSync(bin, path.resolve(__dirname, executable));
 
+    var pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json')));
+    if (platform == 'win') {
+      fs.writeFileSync(path.resolve(__dirname, 'bin/node'), 'This file intentionally left blank');
+      pkg.bin.node = 'bin/node.exe';
+    }
+
+    pkg.dependencies = { };
+    pkg.dependencies["node-" + platform + "-" + arch] = version;
+    pkg.bundleDependencies = ["node-" + platform + "-" + arch];
+
+    fs.writeFileSync(path.resolve(__dirname, 'package.json'), JSON.stringify(pkg, null, 2));
 
     return process.exit(code);
 
