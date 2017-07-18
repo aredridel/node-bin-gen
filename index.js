@@ -149,12 +149,15 @@ function fetchManifest(version) {
       throw err;
     }
   }).then(function() {
+
+    const script = `require('node-bin-setup')("${pkg.version}", require);`;
+
     return P.all([
       fs.readFileAsync(path.resolve(__dirname, 'node-bin-README.md')).then(function(readme) {
         return fs.writeFileAsync(path.resolve(pkg.name, 'README.md'), readme)
       }),
       fs.writeFileAsync(path.resolve(pkg.name, 'package.json'), JSON.stringify(pkg, null, 2)),
-      fs.writeFileAsync(path.resolve(pkg.name, 'installArchSpecificPackage.js'), functionAsProgram(installArchSpecificPackage, pkg.version))
+      fs.writeFileAsync(path.resolve(pkg.name, 'installArchSpecificPackage.js'), script)
     ]);
   });
 }).catch(function(err) {
@@ -188,62 +191,4 @@ function buildMetapackage(version) {
 
     return pkg;
   };
-}
-
-function installArchSpecificPackage(version) {
-  var spawn = require('child_process').spawn;
-  var path = require('path');
-  var fs = require('fs');
-
-  process.env.npm_config_global = 'false';
-
-  var platform = process.platform == 'win32' ? 'win' : process.platform;
-  var arch = platform == 'win' && process.arch == 'ia32' ? 'x86' : process.arch;
-  var executable = platform == 'win' ? 'bin/node.exe' : 'bin/node';
-
-  var cp = spawn('npm', ['install', '--no-save', ['node', platform, arch].join('-') + '@' + version], {
-    stdio: 'inherit',
-    shell: true
-  });
-
-  cp.on('close', function(code) {
-    var bin = path.resolve(path.dirname(require.resolve(['node', platform, arch].join('-') + '/package.json')), executable);
-
-    try {
-      fs.mkdirSync(path.resolve(__dirname, 'bin'));
-    } catch (e) {
-      if (e.code != 'EEXIST') {
-        throw e;
-      }
-    }
-
-    linkSync(bin, path.resolve(__dirname, executable));
-
-    if (platform == 'win') {
-      var pkg = JSON.parse(fs.readFileSync(path.resolve(__dirname, 'package.json')));
-      fs.writeFileSync(path.resolve(__dirname, 'bin/node'), 'This file intentionally left blank');
-      pkg.bin.node = 'bin/node.exe';
-      fs.writeFileSync(path.resolve(__dirname, 'package.json'), JSON.stringify(pkg, null, 2));
-    }
-
-    return process.exit(code);
-
-    function linkSync(src, dest) {
-      try {
-        fs.unlinkSync(dest);
-      } catch (e) {
-        if (e.code != 'ENOENT') {
-          throw e;
-        }
-      }
-      return fs.linkSync(src, dest);
-    }
-  });
-}
-
-function functionAsProgram(fn) {
-  if (!fn.name)
-    throw new Error("Function must be named");
-  var args = [].slice.call(arguments, 1);
-  return "#!/usr/bin/env node\n\n" + fn.toString() + '\n\n' + fn.name + '.apply(null, ' + JSON.stringify(args) + '.concat(process.argv.slice(2)))\n';
 }
