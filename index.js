@@ -50,6 +50,9 @@ function buildArchPackage(os, cpu, version, pre) {
     bin: {
       node: os == 'win' ? 'bin/node.exe' : "bin/node"
     },
+    dependencies: {
+      "node-bin-setup": "^1.0.0"
+    },
     files: [
       os == 'win' ? 'bin/node.exe' : 'bin/node',
       'share',
