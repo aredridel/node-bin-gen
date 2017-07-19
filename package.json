@@ -17,7 +17,7 @@
     "rimraf": "^2.5.2",
     "tar": "^2.2.1",
     "verror": "^1.9.0",
-    "yargs": "^6.5.0"
+    "yargs": "^7.0.2"
   },
   "eslintConfig": {
     "parserOptions": {
