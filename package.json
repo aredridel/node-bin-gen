@@ -12,7 +12,7 @@
   },
   "dependencies": {
     "bluebird": "^3.4.7",
-    "node-fetch": "^1.6.3",
+    "make-fetch-happen": "^2.4.13",
     "pump": "^1.0.1",
     "rimraf": "^2.5.2",
     "tar": "^2.2.1",

@@ -2,9 +2,14 @@
 
 var P = require('bluebird');
 var fs = P.promisifyAll(require('fs'));
-var fetch = require('node-fetch');
-var https = require('https');
 var path = require('path');
+var os = require('os');
+
+var fetch = require('make-fetch-happen').defaults({
+  cacheManager: path.resolve(os.homedir(), '.node-bin-gen-cache')
+});
+
+var https = require('https');
 var VError = require('verror');
 var tar = require('tar');
 var rimraf = P.promisify(require('rimraf'));
