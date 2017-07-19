@@ -188,7 +188,7 @@ function buildMetapackage(version) {
       "license": "ISC",
       "author": "",
       "engines": {
-        "npm": ">=3.0.0"
+        "npm": ">=5.0.0"
       }
     };
 
