@@ -162,7 +162,7 @@ const metapackage = archPackages.then(buildMetapackage(version + (pre != null ? 
 
     return P.all([
       fs.readFileAsync(path.resolve(__dirname, 'node-bin-README.md')).then(function(readme) {
-        return fs.writeFileAsync(path.resolve(pkg.name, 'README.md'), readme)
+        return fs.writeFileAsync(path.resolve(pkg.name, 'README.md'), readme.replace(/\$\{packagename\}/g, pkg.name))
       }),
       fs.writeFileAsync(path.resolve(pkg.name, 'package.json'), JSON.stringify(pkg, null, 2)),
       fs.writeFileAsync(path.resolve(pkg.name, 'installArchSpecificPackage.js'), script)
