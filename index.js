@@ -161,7 +161,7 @@ const metapackage = archPackages.then(buildMetapackage(version + (pre != null ? 
     const script = `require('node-bin-setup')("${pkg.version}", require);`;
 
     return P.all([
-      fs.readFileAsync(path.resolve(__dirname, 'node-bin-README.md')).then(function(readme) {
+      fs.readFileAsync(path.resolve(__dirname, 'node-bin-README.md'), 'utf8').then(function(readme) {
         return fs.writeFileAsync(path.resolve(pkg.name, 'README.md'), readme.replace(/\$\{packagename\}/g, pkg.name))
       }),
       fs.writeFileAsync(path.resolve(pkg.name, 'package.json'), JSON.stringify(pkg, null, 2)),
