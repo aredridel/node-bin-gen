@@ -17,7 +17,7 @@
     "rimraf": "^2.5.2",
     "tar": "^2.2.1",
     "verror": "^1.9.0",
-    "yargs": "^6.5.0"
+    "yargs": "^8.0.2"
   },
   "eslintConfig": {
     "parserOptions": {
@@ -26,10 +26,16 @@
     "rules": {
       "valid-typeof": "error",
       "no-undef": "error",
-      "no-unused-vars": "error"
+      "no-unused-vars": "error",
+      "no-process-exit": 0,
+      "no-shadow": 0,
+      "strict": 0,
+      "eqeqeq": 0,
+      "curly": 0
     },
     "env": {
-      "node": true
+      "node": true,
+      "es6": true
     }
   }
 }

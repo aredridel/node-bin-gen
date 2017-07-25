@@ -1,60 +1,58 @@
 #!/usr/bin/env node
+"use strict";
 
-var P = require('bluebird');
-var fs = P.promisifyAll(require('fs'));
-var path = require('path');
-var os = require('os');
+const P = require('bluebird');
+const fs = P.promisifyAll(require('fs'));
+const path = require('path');
+const os = require('os');
 
-var fetch = require('make-fetch-happen').defaults({
+const fetch = require('make-fetch-happen').defaults({
   cacheManager: path.resolve(os.homedir(), '.node-bin-gen-cache')
 });
 
-var https = require('https');
-var VError = require('verror');
-var tar = require('tar');
-var rimraf = P.promisify(require('rimraf'));
-var zlib = require('zlib');
-var cp = P.promisifyAll(require('child_process'));
-var yargs = require('yargs');
-var pump = P.promisify(require('pump'));
-var debug = require('util').debuglog('node-bin-gen');
+const VError = require('verror');
+const rimraf = P.promisify(require('rimraf'));
+const zlib = require('zlib');
+const cp = P.promisifyAll(require('child_process'));
+const yargs = require('yargs');
+const pump = P.promisify(require('pump'));
+const debug = require('util').debuglog('node-bin-gen');
 
-yargs.describe('skip-binaries', { describe: 'Skip downloading the binaries', boolean: true });
+yargs.option('skip-binaries', { describe: 'Skip downloading the binaries', boolean: true });
 yargs.option('only', { describe: 'Only download this binary package' });
 yargs.option('package-name', { alias: 'n', describe: 'Use this as the main package name', default: 'node-bin' })
 yargs.demand(1, 2, 'You must specify version, and optionally a prerelease');
 yargs.help('help').wrap(76);
-var argv = yargs.argv;
 
-var version = argv._[0];
-var pre = argv._[1];
+const argv = yargs.argv;
 
-if (!version) {
+const versionprime = argv._[0];
+const pre = argv._[1];
+
+if (!versionprime) {
   console.warn("Use: " + argv.$0 + " version [pre]");
   process.exit(1);
   return;
 }
 
-if (version[0] != 'v') {
-  version = 'v' + version;
-}
+const version = (versionprime[0] != 'v') ? 'v' + versionprime : version;
 
 function buildArchPackage(os, cpu, version, pre) {
   debug("building architecture specific package", os, cpu, version, pre);
 
-  var platform = os == 'win' ? 'win32' : os;
-  var arch = os == 'win' && cpu == 'ia32' ? 'x86' : cpu;
-  var executable = os == 'win' ? 'bin/node.exe' : 'bin/node';
+  const platform = os == 'win' ? 'win32' : os;
+  const arch = os == 'win' && cpu == 'ia32' ? 'x86' : cpu;
+  const executable = os == 'win' ? 'bin/node.exe' : 'bin/node';
 
-  var dir = "node-" + os + '-' + cpu;
-  var base = "node-" + version + "-" + os + "-" + cpu;
-  var filename = base + (os == 'win' ? '.zip' : ".tar.gz");
-  var pkg = {
+  const dir = "node-" + os + '-' + cpu;
+  const base = "node-" + version + "-" + os + "-" + cpu;
+  const filename = base + (os == 'win' ? '.zip' : ".tar.gz");
+  const pkg = {
     name: 'node' + "-" + os + "-" + cpu,
     version: version + (pre != null ? '-' + pre : ''),
     description: 'node',
     bin: {
-      node: os == 'win' ? 'bin/node.exe' : "bin/node"
+      node: executable
     },
     files: [
       os == 'win' ? 'bin/node.exe' : 'bin/node',
@@ -72,7 +70,7 @@ function buildArchPackage(os, cpu, version, pre) {
       if (e.code != 'EEXIST') throw e;
     });
   }).then(function downloadBinaries() {
-    var url = "https://nodejs.org" + (
+    const url = "https://nodejs.org" + (
       /rc/.test(version) ? "/download/rc/" :
       /test/.test(version) ? "/download/test/" :
       "/dist/"
@@ -120,9 +118,8 @@ function fetchManifest(version) {
   })
 }
 
-(argv['skip-binaries'] ? P.resolve([]) : fetchManifest(version).then(function(manifest) {
-
-  var v = manifest.filter(function(ver) {
+const binariesFetched = (argv['skip-binaries'] ? P.resolve([]) : fetchManifest(version).then(function(manifest) {
+  const v = manifest.filter(function(ver) {
     return ver.version == version;
   }).shift();
   if (!v) {
@@ -140,16 +137,20 @@ function fetchManifest(version) {
   return files.filter(function(f) {
     return !/^headers|^src/.test(f) && !/pkg$/.test(f);
   }).map(function(f) {
-    var bits = f.split('-');
+    const bits = f.split('-');
     return {
       os: bits[0].replace(/^osx$/, 'darwin'),
       cpu: bits[1],
       format: bits[2] || 'tar.gz'
     };
   });
-}).map(function(v) {
+}));
+
+const archPackages = binariesFetched.map(function(v) {
   return buildArchPackage(v.os, v.cpu, version, pre);
-})).then(buildMetapackage(version + (pre != null ? '-' + pre : ''))).then(function(pkg) {
+});
+
+const metapackage = archPackages.then(buildMetapackage(version + (pre != null ? '-' + pre : ''))).then(function(pkg) {
   return fs.mkdirAsync(pkg.name).catch(function(err) {
     if (err && err.code != 'EEXIST') {
       throw err;
@@ -166,15 +167,16 @@ function fetchManifest(version) {
       fs.writeFileAsync(path.resolve(pkg.name, 'installArchSpecificPackage.js'), script)
     ]);
   });
-}).catch(function(err) {
+})
+
+metapackage.catch(function(err) {
   console.warn(err.stack);
   process.exit(1);
 });
 
 function buildMetapackage(version) {
-  return function(packages) {
-    versionN = version.replace(/^v/, '');
-    var pkg = {
+  return function() {
+    const pkg = {
       "name": argv['package-name'],
       "version": version.replace(/^v/, ''),
       "description": "node",
