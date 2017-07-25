@@ -19,8 +19,9 @@ var yargs = require('yargs');
 var pump = P.promisify(require('pump'));
 var debug = require('util').debuglog('node-bin-gen');
 
-yargs.describe('skip-binaries', 'Skip downloading the binaries');
+yargs.describe('skip-binaries', { describe: 'Skip downloading the binaries', boolean: true });
 yargs.option('only', { describe: 'Only download this binary package' });
+yargs.option('package-name', { alias: 'n', describe: 'Use this as the main package name', default: 'node-bin' })
 yargs.demand(1, 2, 'You must specify version, and optionally a prerelease');
 yargs.help('help').wrap(76);
 var argv = yargs.argv;
@@ -174,7 +175,7 @@ function buildMetapackage(version) {
   return function(packages) {
     versionN = version.replace(/^v/, '');
     var pkg = {
-      "name": "node-bin",
+      "name": argv['package-name'],
       "version": version.replace(/^v/, ''),
       "description": "node",
       "main": "index.js",
