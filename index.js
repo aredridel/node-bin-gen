@@ -185,6 +185,7 @@ function buildMetapackage(version) {
       "keywords": [
         "runtime"
       ],
+      "repository": require('./package.json').repository,
       "scripts": {
         "preinstall": "node installArchSpecificPackage"
       },
