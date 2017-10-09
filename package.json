@@ -14,7 +14,7 @@
     "bluebird": "^3.4.7",
     "make-fetch-happen": "^2.4.13",
     "pump": "^1.0.1",
-    "rimraf": "^2.5.2",
+    "rimraf": "^2.6.0",
     "tar": "^2.2.1",
     "verror": "^1.9.0",
     "yargs": "^8.0.2"
