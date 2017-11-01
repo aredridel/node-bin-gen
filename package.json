@@ -11,13 +11,13 @@
     "url": "https://github.com/aredridel/node-bin-gen"
   },
   "dependencies": {
-    "bluebird": "^3.4.7",
-    "make-fetch-happen": "^2.4.13",
+    "bluebird": "^3.5.1",
+    "make-fetch-happen": "^2.5.0",
     "pump": "^1.0.1",
-    "rimraf": "^2.5.2",
+    "rimraf": "^2.6.2",
     "tar": "^2.2.1",
     "verror": "^1.9.0",
-    "yargs": "^8.0.2"
+    "yargs": "^10.0.3"
   },
   "eslintConfig": {
     "parserOptions": {
