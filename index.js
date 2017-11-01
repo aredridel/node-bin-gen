@@ -79,7 +79,7 @@ function buildArchPackage(os, cpu, version, pre) {
 
     debug("Fetching", url);
     return fetch(url).then(function(res) {
-      if (res.status != 200) {
+      if (res.status != 200 && res.status != 304) {
         throw new VError("not ok: fetching %j got status code %s", url, res.status);
       }
 
