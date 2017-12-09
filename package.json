@@ -12,6 +12,7 @@
   },
   "dependencies": {
     "bluebird": "^3.5.1",
+    "end-of-stream": "^1.4.0",
     "make-fetch-happen": "^2.6.0",
     "pump": "^2.0.0",
     "rimraf": "^2.6.2",

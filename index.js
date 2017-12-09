@@ -17,6 +17,7 @@ const cp = P.promisifyAll(require('child_process'));
 const yargs = require('yargs');
 const pump = P.promisify(require('pump'));
 const debug = require('util').debuglog('node-bin-gen');
+const eos = P.promisify(require('end-of-stream'));
 
 yargs.option('skip-binaries', { describe: 'Skip downloading the binaries', boolean: true });
 yargs.option('only', { describe: 'Only download this binary package' });
@@ -87,7 +88,9 @@ function buildArchPackage(os, cpu, version, pre) {
       if (os == 'win') {
         const f = fs.createWriteStream(filename);
         const written = pump(res.body, f);
-        return written.then(() => cp.execFileAsync('unzip', ['-d', `${dir}/bin`, '-o', '-j', filename, `${base}/node.exe` ]));
+        const closed = eos(f);
+	
+        return P.all([written, closed]).then(() => cp.execFileAsync('unzip', ['-d', `${dir}/bin`, '-o', '-j', filename, `${base}/node.exe` ]));
       } else {
         const c = cp.spawn('tar', ['--strip-components=1', '-C', dir, '-x'], {
 	  stdio: [ 'pipe', process.stdout, process.stderr ]
