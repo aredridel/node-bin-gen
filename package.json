@@ -12,8 +12,8 @@
   },
   "dependencies": {
     "bluebird": "^3.5.1",
-    "make-fetch-happen": "^2.5.0",
-    "pump": "^1.0.1",
+    "make-fetch-happen": "^2.6.0",
+    "pump": "^2.0.0",
     "rimraf": "^2.6.2",
     "tar": "^2.2.1",
     "verror": "^1.9.0",
