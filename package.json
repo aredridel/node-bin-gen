@@ -1,6 +1,6 @@
 {
   "name": "node-bin-gen",
-  "version": "7.1.5",
+  "version": "8.0.0",
   "description": "Generate a node binary package",
   "author": "Aria Stewart <aredridel@dinhe.net>",
   "main": "index.js",
