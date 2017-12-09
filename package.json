@@ -10,8 +10,10 @@
     "type": "git",
     "url": "https://github.com/aredridel/node-bin-gen"
   },
+  "engines": {
+    "node": ">=8.0.0"
+  },
   "dependencies": {
-    "bluebird": "^3.5.1",
     "end-of-stream": "^1.4.0",
     "make-fetch-happen": "^2.6.0",
     "pump": "^2.0.0",
@@ -21,7 +23,7 @@
   },
   "eslintConfig": {
     "parserOptions": {
-      "ecmaVersion": 6
+      "ecmaVersion": 8
     },
     "rules": {
       "valid-typeof": "error",
