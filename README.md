@@ -20,7 +20,7 @@ Use a `pre` version if you're testing.
 
 Warning: requires `npm@>=3` to install the generated packages globally!
 
-This package generates a `node-bin` or `iojs-bin` package, and all of the `node-{os}-{cpu}` packages, which are installed by the main metapackage (and as a hack, added to the `package.json` of `node-bin` at install time as a dependency to keep npm from marking it extrantous..
+This package generates a `node-bin` or `iojs-bin` package, and all of the `node-{os}-{cpu}` packages, which are installed by the main metapackage (and as a hack, added to the `package.json` of `node-bin` at install time as a dependency to keep npm from marking it extraneous..
 
 # License
 
