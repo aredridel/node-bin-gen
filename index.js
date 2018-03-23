@@ -26,7 +26,7 @@ const eos = util.promisify(require('end-of-stream'))
 
 yargs.option('skip-binaries', { describe: 'Skip downloading the binaries', boolean: true })
 yargs.option('only', { describe: 'Only download this binary package' })
-yargs.option('package-name', { alias: 'n', describe: 'Use this as the main package name', default: 'node-bin' })
+yargs.option('package-name', { alias: 'n', describe: 'Use this as the main package name', default: 'node' })
 yargs.version()
 yargs.demandCommand(1, 2, 'You must specify version, and optionally a prerelease')
 yargs.help('help').wrap(76)
