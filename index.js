@@ -18,7 +18,7 @@ const fetch = require('make-fetch-happen').defaults({
 const VError = require('verror')
 const rimraf = util.promisify(require('rimraf'))
 const zlib = require('zlib')
-const { spawn } = require('child_process')
+const { spawn, execSync } = require('child_process')
 const yargs = require('yargs')
 const pump = util.promisify(require('pump'))
 const debug = require('util').debuglog('node-bin-gen')
@@ -46,6 +46,16 @@ const version = (versionprime[0] != 'v') ? 'v' + versionprime : version
 
 async function buildArchPackage(os, cpu, version, pre) {
   debug("building architecture specific package", os, cpu, version, pre)
+
+  var actualCpu = cpu;
+
+  if (cpu === 'arm') {
+    const armCpu = execSync('arch')
+
+    if (typeof armCpu !== 'undefined' && armCpu.toString().trim().length > 0) {
+      actualCpu = armCpu.toString().trim()
+    }
+  }
 
   const platform = os == 'win' ? 'win32' : os
   const arch = os == 'win' && cpu == 'ia32' ? 'x86' : cpu
