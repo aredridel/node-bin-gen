@@ -17,7 +17,7 @@
     "end-of-stream": "^1.4.1",
     "make-fetch-happen": "^5.0.0",
     "pump": "^3.0.0",
-    "rimraf": "^2.6.2",
+    "rimraf": "^3.0.0",
     "verror": "^1.9.0",
     "yargs": "^13.2.4"
   },
