@@ -55,7 +55,7 @@ async function buildArchPackage(os, cpu, version, pre) {
   const base = "node-" + version + "-" + os + "-" + cpu
   const filename = base + (os == 'win' ? '.zip' : ".tar.gz")
   const pkg = {
-    name: 'node' + "-" + os + "-" + cpu,
+    name: (os == 'darwin' && cpu == 'arm64' ? 'node-bin' : 'node') + "-" + os + "-" + cpu,
     version: version + (pre != null ? '-' + pre : ''),
     description: 'node',
     bin: {
