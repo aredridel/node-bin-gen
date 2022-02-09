@@ -148,7 +148,7 @@ async function main() {
 
   if (!v.files || !v.files.length) {
     debug("No files, defaulting")
-    v.files =  ['darwin-x64', 'linux-arm64', 'linux-armv7l', 'linux-ppc64', 'linux-ppc64le', 'linux-s390x', 'linux-x64', 'linux-x86', 'sunos-x64', 'win-x64', 'win-x86']
+    v.files =  ['darwin-arm64', 'darwin-x64', 'linux-arm64', 'linux-armv7l', 'linux-ppc64', 'linux-ppc64le', 'linux-s390x', 'linux-x64', 'linux-x86', 'sunos-x64', 'win-x64', 'win-x86']
   }
 
   const files = argv.only ? [argv.only] : v.files
