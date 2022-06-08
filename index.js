@@ -48,7 +48,7 @@ async function buildArchPackage(os, cpu, version, pre) {
   debug("building architecture specific package", os, cpu, version, pre)
 
   const platform = os == 'win' ? 'win32' : os
-  const arch = os == 'win' && cpu == 'ia32' ? 'x86' : cpu
+  const arch = os == 'win' && cpu == 'ia32' ? ['x86', 'ia32'] : cpu
   const executable = os == 'win' ? 'bin/node.exe' : 'bin/node'
 
   const dir = "node-" + os + '-' + cpu
