@@ -30,7 +30,7 @@ argparser.option("package-name", {
   describe: "Use this as the main package name",
   default: "node",
 });
-argparser.option("verbose", { describe: "output messages" });
+argparser.option("verbose", { describe: "output messages", boolean: true });
 argparser.version();
 argparser.demandCommand(
   1,
