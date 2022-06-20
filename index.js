@@ -57,7 +57,7 @@ function debug(...args) {
   ndebug(...args);
 }
 
-const version = versionprime[0] != "v" ? "v" + versionprime : version;
+const version = versionprime[0] != "v" ? "v" + versionprime : versionprime;
 
 async function buildArchPackage(os, cpu, version, pre) {
   debug("building architecture specific package", os, cpu, version, pre);
