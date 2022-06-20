@@ -15,7 +15,6 @@
     "node": ">=18.0.0"
   },
   "dependencies": {
-    "make-fetch-happen": "^10.0.3",
     "rimraf": "^3.0.0",
     "verror": "^1.9.0",
     "yargs": "^17.0.1"
