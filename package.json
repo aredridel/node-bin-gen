@@ -1,6 +1,6 @@
 {
   "name": "node-bin-gen",
-  "version": "11.1.1",
+  "version": "11.1.2",
   "description": "Generate a node binary package",
   "author": "Aria Stewart <aredridel@dinhe.net>",
   "main": "index.js",
