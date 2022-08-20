@@ -12,7 +12,8 @@
   },
   "type": "module",
   "engines": {
-    "node": ">=18.0.0"
+    "node": ">=18.0.0",
+    "npm": ">2.0.0"
   },
   "dependencies": {
     "rimraf": "^3.0.0",
