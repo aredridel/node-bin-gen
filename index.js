@@ -4,12 +4,12 @@
 import { open, unlink, mkdir, writeFile, readFile } from "node:fs/promises";
 import { Writable, Transform } from "node:stream";
 import { join, resolve, dirname } from "node:path";
-import { promisify, debuglog } from "node:util";
+import { debuglog } from "node:util";
 import { execFile, spawn } from "node:child_process";
 import { fileURLToPath } from "url";
 
 import verr from "verror";
-import rimrafcb from "rimraf";
+import rimraf from "rimraf";
 import zlib from "zlib";
 import yargs from "yargs";
 
@@ -17,7 +17,6 @@ const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
 
 const { VError } = verr;
-const rimraf = promisify(rimrafcb);
 
 const argparser = yargs(process.argv.slice(2));
 argparser.option("skip-binaries", {
@@ -94,6 +93,7 @@ async function buildArchPackage(os, cpu, version, pre) {
 
   debug("removing", dir);
   await rimraf(dir, { glob: false });
+  debug("creating", dir);
   await mkdir(dir).catch((e) => {
     if (e.code != "EEXIST") throw e;
   });
@@ -169,7 +169,7 @@ async function fetchManifest(version) {
 }
 
 main().catch((err) => {
-  console.warn(err.stack);
+  console.warn(err);
   process.exit(1);
 });
 
