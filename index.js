@@ -4,8 +4,8 @@
 import { open, unlink, mkdir, writeFile, readFile } from "node:fs/promises";
 import { Writable, Transform } from "node:stream";
 import { join, resolve, dirname } from "node:path";
-import { debuglog } from "node:util";
-import { execFile, spawn } from "node:child_process";
+import { debuglog, promisify } from "node:util";
+import { execFile as execFile_, spawn } from "node:child_process";
 import { fileURLToPath } from "url";
 
 import verr from "verror";
@@ -15,6 +15,7 @@ import yargs from "yargs";
 
 const __filename = fileURLToPath(import.meta.url);
 const __dirname = dirname(__filename);
+const execFile = promisify(execFile_);
 
 const { VError } = verr;
 
@@ -125,7 +126,7 @@ async function buildArchPackage(os, cpu, version, pre) {
     await res.body.pipeTo(Writable.toWeb(f.createWriteStream()));
     f.close();
 
-    const running = execFile("unzip", [
+    const running = await execFile("unzip", [
       "-d",
       `${dir}/bin`,
       "-o",
@@ -134,10 +135,8 @@ async function buildArchPackage(os, cpu, version, pre) {
       `${base}/node.exe`,
     ]);
 
-    await new Promise((y, n) => {
-      running.on("error", n);
-      running.on("exit", y);
-    });
+    if (running.stderr) console.warn(running.stderr);
+
     await unlink(filename);
   } else {
     const c = spawn("tar", ["--strip-components=1", "-C", dir, "-x"], {
@@ -147,7 +146,10 @@ async function buildArchPackage(os, cpu, version, pre) {
     const unzip = Transform.toWeb(zlib.createGunzip());
 
     await res.body.pipeThrough(unzip).pipeTo(Writable.toWeb(c.stdin));
+    c.stdin.end();
   }
+
+  debug("Finished unpacking into", dir);
 
   await writeFile(join(dir, "package.json"), JSON.stringify(pkg, null, 2));
   return pkg;
@@ -212,7 +214,7 @@ async function main() {
       return (
         !/^headers|^src/.test(f) &&
         !/pkg$/.test(f) &&
-        !/^win-...-(exe|msi|7z)/.test(f)
+        !/^win-([^-]+)-(exe|msi|7z)/.test(f)
       );
     })
     .map(function (f) {
@@ -224,9 +226,9 @@ async function main() {
       };
     });
 
-  await Promise.all(
-    binaries.map((v) => buildArchPackage(v.os, v.cpu, version, pre))
-  );
+  for (const v of binaries) {
+    await buildArchPackage(v.os, v.cpu, version, pre)
+  }
 
   const pkg = await buildMetapackage(version + (pre != null ? "-" + pre : ""));
 
