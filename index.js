@@ -9,7 +9,7 @@ import { execFile as execFile_, spawn } from "node:child_process";
 import { fileURLToPath } from "url";
 
 import verr from "verror";
-import rimraf from "rimraf";
+import {rimraf} from "rimraf";
 import zlib from "zlib";
 import yargs from "yargs";
 
