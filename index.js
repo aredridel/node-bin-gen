@@ -135,7 +135,7 @@ async function buildArchPackage(os, cpu, version, pre) {
       `${base}/node.exe`,
     ]);
 
-    if (running.stderr) console.warn(running.stderr);
+    if (running.stderr) console.warn("error from unzip", running.stderr);
 
     await unlink(filename);
   } else {
@@ -202,6 +202,7 @@ async function main() {
       "linux-x64",
       "linux-x86",
       "sunos-x64",
+      "win-arm64",
       "win-x64",
       "win-x86",
     ];
