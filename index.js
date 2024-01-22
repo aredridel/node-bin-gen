@@ -124,7 +124,6 @@ async function buildArchPackage(os, cpu, version, pre) {
     const f = await open(filename, "w");
 
     await res.body.pipeTo(Writable.toWeb(f.createWriteStream()));
-    f.close();
 
     const running = await execFile("unzip", [
       "-d",
@@ -146,7 +145,6 @@ async function buildArchPackage(os, cpu, version, pre) {
     const unzip = Transform.toWeb(zlib.createGunzip());
 
     await res.body.pipeThrough(unzip).pipeTo(Writable.toWeb(c.stdin));
-    c.stdin.end();
   }
 
   debug("Finished unpacking into", dir);
