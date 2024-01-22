@@ -8,7 +8,7 @@
   "license": "ISC",
   "repository": {
     "type": "git",
-    "url": "https://github.com/aredridel/node-bin-gen"
+    "url": "git+https://github.com/aredridel/node-bin-gen.git"
   },
   "type": "module",
   "engines": {
