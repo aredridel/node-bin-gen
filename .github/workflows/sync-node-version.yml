@@ -46,7 +46,8 @@ jobs:
                 if [ -d "$dir" ]; then
                   echo "Publishing directory: $dir"
                   cd "$dir"
-                  npm publish --dry-run #debug
+                  npm publish
+                  # npm publish --dry-run
                   cd ..
                 else
                   echo "Directory $dir not found."
