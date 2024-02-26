@@ -89,7 +89,7 @@ async function buildArchPackage(os, cpu, version, pre) {
       "LICENSE",
     ],
     os: platform,
-    cpu: arch,
+    cpu: arch == 'ppc64le' ? 'ppc64' : arch,
   };
 
   debug("removing", dir);
