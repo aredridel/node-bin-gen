@@ -43,21 +43,25 @@ jobs:
           while IFS= read -r VERSION; do
             echo "Checking version $VERSION..."
             if [ -z "$(npm view node@$VERSION)" ]; then
-              echo "Version $VERSION is not published on npm. Running custom script."
-              mkdir -p "target/$VERSION" && cd "target/$VERSION"
-              node ../../index.js $VERSION
-              for dir in */ ; do
-                if [ -d "$dir" ]; then
-                  echo "Publishing directory: $dir"
-                  cd "$dir"
-                  npm publish
-                  # npm publish --dry-run
-                  cd ..
-                else
-                  echo "Directory $dir not found."
-                fi
-              done
-              cd ../../
+              echo "Version $VERSION is not published on npm."
+              (
+                mkdir -p "target/$VERSION" && cd "target/$VERSION"
+                node ../../index.js $VERSION
+                for dir in */ ; do
+                  pkg="$(echo $dir | sed -e 's@/@@g')"
+                  if [ -z "$(npm view $pkg@$VERSION)" ]; then
+                    echo "$pkg has not been published."
+                    echo "Publishing directory: $dir"
+                    (
+                      cd "$dir"
+                      npm publish
+                      # npm publish --dry-run
+                    )
+                  else
+                    echo "$pkg@$VERSION is already published on npm. Skipping."
+                  fi
+                done
+              )
             else
               echo "Version $VERSION is already published on npm. Skipping."
             fi
