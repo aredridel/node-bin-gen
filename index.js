@@ -79,11 +79,12 @@ async function buildArchPackage(os, cpu, version, pre) {
     version: version + (pre != null ? "-" + pre : ""),
     description: "node",
     repository: {
-      url: "https://github.com/aredridel/node-bin-gen"
+      url: "git+https://github.com/aredridel/node-bin-gen.git"
     },
     bin: {
       node: executable,
     },
+    license: "MIT",
     files: [
       os == "win" ? "bin/node.exe" : "bin/node",
       "share",
@@ -274,7 +275,7 @@ async function buildMetapackage(version) {
     dependencies: {
       "node-bin-setup": "^1.0.0",
     },
-    license: "ISC",
+    license: "MIT",
     author: "",
     engines: {
       npm: ">=5.0.0",
