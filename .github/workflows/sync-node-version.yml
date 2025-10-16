@@ -48,7 +48,7 @@ jobs:
                 mkdir -p "target/$VERSION" && cd "target/$VERSION"
                 node ../../index.js $VERSION
                 for dir in */ ; do
-                  pkg="$(cat $dir/package.json | jq .name)"
+                  pkg="$(cat $dir/package.json | jq -r .name)"
                   if [ -z "$(npm view $pkg@$VERSION)" ]; then
                     echo "$pkg has not been published."
                     echo "Publishing directory: $dir"
