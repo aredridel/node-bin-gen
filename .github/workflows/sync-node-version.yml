@@ -32,7 +32,7 @@ jobs:
         run: |
           #set -x
           DATE_30_DAYS_AGO=$(date --date='30 days ago' +%Y-%m-%d)
-          curl -s https://nodejs.org/dist/index.json | jq --arg DATE "$DATE_30_DAYS_AGO" -r '.[] | select(.date >= $DATE) | .version' > versions.txt
+          curl -s https://nodejs.org/dist/index.json | jq --arg DATE "$DATE_30_DAYS_AGO" -r '.[] | select(.date >= $DATE) | .version' | sort > versions.txt
           echo "Node.js versions released in the last 30 days:"
           cat versions.txt
           #set +x
