@@ -78,6 +78,9 @@ async function buildArchPackage(os, cpu, version, pre) {
       cpu,
     version: version + (pre != null ? "-" + pre : ""),
     description: "node",
+    repository: {
+      url: "https://github.com/aredridel/node-bin-gen"
+    },
     bin: {
       node: executable,
     },
