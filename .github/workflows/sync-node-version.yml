@@ -53,11 +53,11 @@ jobs:
                     echo "Publishing directory: $dir"
                     npm view $pkg version | IFS=. read MAJOR MINOR PATCH
                     echo $VERSION | IFS=. read NEWMAJ NEWMIN NEWPATCH
-                    if [ $NEWMAJOR -gt $MAJOR -o ( $NEWMAJOR = $MAJOR -a $NEWMINOR -gt $MINOR ) -o ( $NEWMAJOR = $MAJOR -a $NEWMINOR = $MINOR -a $NEWPATCH -gt $PATCH) ]; then 
+                    if [ $NEWMAJOR -gt $MAJOR ] || [ $NEWMAJOR = $MAJOR -a $NEWMINOR -gt $MINOR ] || [ $NEWMAJOR = $MAJOR -a $NEWMINOR = $MINOR -a $NEWPATCH -gt $PATCH ]; then 
                       TAG=latest
                     else
                       TAG=v$NEWMAJOR-latest
-                    vi
+                    fi
                     (
                       cd "$dir"
                       npm publish --tag="$TAG"
