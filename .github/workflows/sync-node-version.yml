@@ -51,9 +51,16 @@ jobs:
                   if [ -z "$(npm view $pkg@$VERSION)" ]; then
                     echo "$pkg has not been published."
                     echo "Publishing directory: $dir"
+                    npm view $pkg version | IFS=. read MAJOR MINOR PATCH
+                    echo $VERSION | IFS=. read NEWMAJ NEWMIN NEWPATCH
+                    if [ $NEWMAJOR -gt $MAJOR -o ( $NEWMAJOR = $MAJOR -a $NEWMINOR -gt $MINOR ) -o ( $NEWMAJOR = $MAJOR -a $NEWMINOR = $MINOR -a $NEWPATCH -gt $PATCH) ]; then 
+                      TAG=latest
+                    else
+                      TAG=v$NEWMAJOR-latest
+                    vi
                     (
                       cd "$dir"
-                      npm publish
+                      npm publish --tag="$TAG"
                       # npm publish --dry-run
                     )
                   else
