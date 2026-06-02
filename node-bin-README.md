@@ -12,6 +12,16 @@ Use
 npm i ${packagename}@lts
 ```
 
+> **Note:** This package uses a `preinstall` script to download the correct binary for your platform. Newer versions of npm block install scripts by default. If installation fails or the `node` binary is missing, add the following to your `package.json` and reinstall:
+>
+> ```json
+> {
+>   "allowScripts": ["${packagename}"]
+> }
+> ```
+>
+> Or run `npm approve-scripts` after installation.
+
 Use with `npx`
 --------------
 
